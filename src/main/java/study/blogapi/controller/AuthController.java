@@ -98,11 +98,11 @@ public class AuthController {
     }
     @PostMapping("/signin")
     public ResponseEntity<JwtAuthenticationResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
-        Authentication authentication = authenticationManager.authenticate(
+        Authentication authentication = authenticationManager.authenticate( //authenticationManager là điểm bắt đầu rồi sau đó gọi provider
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsernameOrEmail(),loginRequest.getPassword())
         );
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtTokenProvider.generateToken(authentication);
+        SecurityContextHolder.getContext().setAuthentication(authentication); // lưu thông tin xác thực vào securityContext
+        String jwt = jwtTokenProvider.generateToken(authentication); // tạo jwt từ thng tin xác thực
         return ResponseEntity.ok(new JwtAuthenticationResponse(jwt));
     }
 }

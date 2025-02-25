@@ -52,20 +52,13 @@ public class AlbumServiceImpl implements AlbumService {
 	public PagedResponse<AlbumResponse> getAllAlbums(int page, int size) {
 		AppUtils.validatePageNumberAndSize(page, size);
 
-		Pageable pageable = PageRequest.of(page, size, Sort.Direction.DESC, CREATED_AT);
+		Page<Album> albums = albumRepository.findAll(PageRequest.of(page, size, Sort.by("createdAt").descending()));
 
-		Page<Album> albums = albumRepository.findAll(pageable);
+		List<AlbumResponse> albumResponses = albums.map(album -> modelMapper.map(album, AlbumResponse.class)).getContent();
 
-		if (albums.getNumberOfElements() == 0) {
-			return new PagedResponse<>(Collections.emptyList(), albums.getNumber(), albums.getSize(), albums.getTotalElements(),
-					albums.getTotalPages(), albums.isLast());
-		}
-
-		List<AlbumResponse> albumResponses = Arrays.asList(modelMapper.map(albums.getContent(), AlbumResponse[].class));
-
-		return new PagedResponse<>(albumResponses, albums.getNumber(), albums.getSize(), albums.getTotalElements(), albums.getTotalPages(),
-				albums.isLast());
+		return new PagedResponse<>(albumResponses, albums.getNumber(), albums.getSize(), albums.getTotalElements(), albums.getTotalPages(), albums.isLast());
 	}
+
 
 	@Override
 	public ResponseEntity<Album> addAlbum(AlbumRequest albumRequest, UserPrincipal currentUser) {

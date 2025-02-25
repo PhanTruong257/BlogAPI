@@ -57,10 +57,10 @@ public class SecurityConfig {
 	}
 
 	@Bean
-	public AuthenticationManager authenticationManager() {
+	public AuthenticationManager authenticationManager() { // provider gọi DaoAuthenticationProvider thực hiện xác thực
 		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-		authProvider.setUserDetailsService(customUserDetailsService);
-		authProvider.setPasswordEncoder(passwordEncoder());
+		authProvider.setUserDetailsService(customUserDetailsService); // chỉ định custoimUserDetail làm database
+		authProvider.setPasswordEncoder(passwordEncoder());// nếu user tồn tại thì kiểm tra password
 		return new ProviderManager(List.of(authProvider));
 	}
 
