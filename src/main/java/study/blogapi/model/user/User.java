@@ -46,7 +46,7 @@ public class User  extends DateAudit {
 
     @NotBlank
     @Column(name = "username")
-    @Size(max = 15)
+    @Size(max = 40)
     private String username;
 
     @NotBlank

@@ -1,7 +1,9 @@
 package study.blogapi.config;
 
+import org.springframework.security.config.Customizer;
 import study.blogapi.security.JwtAuthenticationEntryPoint;
 import study.blogapi.security.JwtAuthenticationFilter;
+import study.blogapi.security.Oauth2.OAuth2Success;
 import study.blogapi.service.impl.CustomUserDetailsServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,18 +27,22 @@ import java.util.List;
 		jsr250Enabled = true,
 		prePostEnabled = true)
 public class SecurityConfig {
+	private final PasswordEncoder passwordEncoder;
 
 	private final CustomUserDetailsServiceImpl customUserDetailsService;
 	private final JwtAuthenticationEntryPoint unauthorizedHandler;
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
+	private final OAuth2Success oAuth2Success;
 
-	public SecurityConfig(CustomUserDetailsServiceImpl customUserDetailsService,
-						  JwtAuthenticationEntryPoint unauthorizedHandler,
-						  JwtAuthenticationFilter jwtAuthenticationFilter) {
-		this.customUserDetailsService = customUserDetailsService;
+	public SecurityConfig(PasswordEncoder passwordEncoder, CustomUserDetailsServiceImpl customUserDetailsService,
+                          JwtAuthenticationEntryPoint unauthorizedHandler,
+                          JwtAuthenticationFilter jwtAuthenticationFilter, OAuth2Success oAuth2Success) {
+        this.passwordEncoder = passwordEncoder;
+        this.customUserDetailsService = customUserDetailsService;
 		this.unauthorizedHandler = unauthorizedHandler;
 		this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-	}
+        this.oAuth2Success = oAuth2Success;
+    }
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http
@@ -47,10 +53,15 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(HttpMethod.GET, "/api/**").permitAll()
 						.requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
+						.requestMatchers("/oauth2/authorization/**").permitAll()
 						.requestMatchers(HttpMethod.GET, "/api/users/checkUsernameAvailability", "/api/users/checkEmailAvailability").permitAll()
 						.anyRequest().authenticated()
-				);
 
+				)
+				.oauth2Login(oauth2 -> oauth2
+						.successHandler(oAuth2Success) // Custom xử lý khi login OAuth2 thành công
+
+				);
 		http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 		return http.build();
@@ -60,12 +71,8 @@ public class SecurityConfig {
 	public AuthenticationManager authenticationManager() { // provider gọi DaoAuthenticationProvider thực hiện xác thực
 		DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
 		authProvider.setUserDetailsService(customUserDetailsService); // chỉ định custoimUserDetail làm database
-		authProvider.setPasswordEncoder(passwordEncoder());// nếu user tồn tại thì kiểm tra password
+		authProvider.setPasswordEncoder(passwordEncoder);// nếu user tồn tại thì kiểm tra password
 		return new ProviderManager(List.of(authProvider));
 	}
 
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
 }

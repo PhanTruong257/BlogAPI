@@ -1,5 +1,6 @@
 package study.blogapi.config;
 
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import study.blogapi.security.UserPrincipal;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,7 +21,6 @@ public class AuditingConfig {
 		return new SpringSecurityAuditAwareImpl();
 	}
 }
-
 class SpringSecurityAuditAwareImpl implements AuditorAware<Long> {
 
 	@Override
@@ -31,8 +31,20 @@ class SpringSecurityAuditAwareImpl implements AuditorAware<Long> {
 			return Optional.empty();
 		}
 
-		UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+		Object principal = authentication.getPrincipal();
 
-		return Optional.ofNullable(userPrincipal.getId());
+		// Kiểm tra kiểu của principal và xử lý đúng cách
+		if (principal instanceof UserPrincipal userPrincipal) {
+			// Trường hợp login bằng UserPrincipal (login thông thường)
+			return Optional.ofNullable(userPrincipal.getId());
+		} else if (principal instanceof OAuth2User oAuth2User) {
+			// Trường hợp login qua OAuth2
+			String email = (String) oAuth2User.getAttributes().get("email");
+			// Lấy ID hoặc thông tin từ OAuth2User nếu cần
+			return Optional.empty();  // Hoặc bạn có thể sử dụng một cách khác để lấy ID nếu cần
+		} else {
+			return Optional.empty();
+		}
 	}
 }
+

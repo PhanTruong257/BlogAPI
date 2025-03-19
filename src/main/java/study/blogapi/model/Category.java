@@ -41,11 +41,7 @@ public class Category extends UserDateAudit {
     }
 
     public void setPosts(List<Post> posts) {
-        if (posts == null) {
-            this.posts = null;
-        } else {
-            this.posts = Collections.unmodifiableList(posts);
-        }
+        this.posts = posts != null ? new ArrayList<>(posts) : null;
     }
 
 }

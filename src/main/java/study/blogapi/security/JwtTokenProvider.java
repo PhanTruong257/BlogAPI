@@ -24,10 +24,8 @@ public class JwtTokenProvider {
 
 	public String generateToken(Authentication authentication) {
 		UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-
 		Date now = new Date();
 		Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
-
 		return Jwts.builder()
 				.setSubject(Long.toString(userPrincipal.getId()))
 				.setIssuedAt(new Date())
@@ -35,13 +33,24 @@ public class JwtTokenProvider {
 				.signWith(SignatureAlgorithm.HS512, jwtSecret)
 				.compact();
 	}
+	public String generateTokenFromEmail(String email) {
+		Date now = new Date();
+		Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
+
+		return Jwts.builder()
+				.setSubject(email)  // Sử dụng email làm subject
+				.setIssuedAt(now)
+				.setExpiration(expiryDate)
+				.signWith(SignatureAlgorithm.HS512, jwtSecret)
+				.compact();
+	}
+
 
 	public Long getUserIdFromJWT(String token) {
 		Claims claims = Jwts.parser()
 				.setSigningKey(jwtSecret)
 				.parseClaimsJws(token)
 				.getBody();
-
 		return Long.valueOf(claims.getSubject());
 	}
 
